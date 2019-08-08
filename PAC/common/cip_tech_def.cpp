@@ -7792,6 +7792,8 @@ float MSAPID::pid_eval( float current_value, int delta_sign /*= 1 */ )
     float dmax = par[ 0 ][ pid_par_offset + P_max ];
     float dmin = par[ 0 ][ pid_par_offset + P_min ];
 
+	float task = par[0][pid_par_offset + P_Z];
+
     if ( dmax == dmin )
         {
         dmax = dmin + 1;
@@ -7801,8 +7803,7 @@ float MSAPID::pid_eval( float current_value, int delta_sign /*= 1 */ )
             }
         }
 
-    float ek = delta_sign * 100 * ( par[ 0 ][ pid_par_offset + P_Z ] - current_value ) /
-        ( dmax - dmin );
+    float ek = delta_sign * 100 * ( task - current_value ) / ( dmax - dmin );
 
     if ( G_DEBUG )
         {
@@ -7819,11 +7820,23 @@ float MSAPID::pid_eval( float current_value, int delta_sign /*= 1 */ )
     if ( dt == 0 ) dt = 1;
     if ( TI == 0 ) TI = 0.0001f;
 
-    if ( get_delta_millisec( last_time ) > dt*1000L )
-        {
-        q0 = K * ( 1 + TD / dt );
-        q1 = K * ( -1 - 2 * TD / dt + 2 * dt / TI );
-        q2 = K * TD / dt;
+	float deltaTime = get_delta_millisec(last_time) / 1000L;
+
+	if (deltaTime >= dt)
+		{
+		if (pid_par_offset == 61) //≈сли регул€тор подогрева пропорционально увеличиваем K при перегреве.
+			{
+			if ((current_value > task) && (dmax > current_value))
+				{
+				float empower = (current_value - task) * (dmax) / (dmax - current_value) / 2;
+				K += empower;
+				}
+
+			}
+
+        q0 = K * ( 1 + TD / deltaTime);
+        q1 = K * ( -1 - 2 * TD / deltaTime + 2 * deltaTime / TI );
+        q2 = K * TD / deltaTime;
 
         dUk = q0 * ek + q1 * ek_1 + q2 * ek_2;
         Uk = uk_1 + dUk;
@@ -7911,15 +7924,29 @@ TSav::TSav(void) {
     n=0;
     cn=0;
     integrator=0;
+	for (int i = 0; i < 101; i++)
+		{
+		intervals[i] = 0;
+		}
+	maxinterval = 0;
     };
 
 TSav::~TSav(void) { };
 
 void TSav::Add(float val, unsigned long inegr) {
     unsigned long delta, i;
+	int k;
     if (inegr>integrator) {
         delta=inegr-integrator;
         integrator=inegr;
+
+		k = val * 20;
+		if (k >= 0 && k <= 100)
+			{
+			if (k > maxinterval) maxinterval = k;
+			intervals[k] += delta;
+			}
+
         for (i=0; i<delta; i++) {
             n++;
             cn=(cn*(n-1)+val)/n;
@@ -7931,11 +7958,31 @@ void TSav::R(void) {
     n=0;
     cn=0;
     integrator=0;
+	for (int i = 0; i < 101; i++)
+		{
+		intervals[i] = 0;
+		}
+	maxinterval = 0;
     };
 
 float TSav::Q(void) {
     return cn;
-    };
+    }
+
+float TSav::Max(float weight)
+	{
+	int i;
+	for (i = maxinterval; i >= 0; i--)
+		{
+		if (intervals[i] >= weight * n)
+			{
+			return i * 0.05f;
+			}
+		}
+
+	return 0.0f;
+	}
+;
 
 
 #ifdef WIN_OS

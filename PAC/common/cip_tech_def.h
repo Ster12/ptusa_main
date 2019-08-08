@@ -493,12 +493,15 @@ class TSav
 		float cn;
 		unsigned long n;
 		unsigned long integrator;
+		unsigned int intervals[101];
+		int maxinterval;
 	public:
 		TSav(void);
 		~TSav(void);
 		void Add(float val, unsigned long inegr);
 		void R(void);
 		float Q(void);
+		float Max(float weight = 0.05);
 	};
 
 class cipline_tech_object: public tech_object
