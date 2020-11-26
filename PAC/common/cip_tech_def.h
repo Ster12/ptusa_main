@@ -32,6 +32,8 @@
 ///@brief Максимальная длина номера машины
 #define CAR_NAME_MAX_LENGTH 15
 
+#define MAX_DEV_NAME 30
+
 #define TMR_CNT    10
 #define SAV_CNT    1
 
@@ -356,7 +358,14 @@ enum workParameters
     P_SIGNAL_CIPEND2,                   //Сигнал "Мойка окончена 2"
     P_SIGNAL_CAN_CONTINUE,              //Сигнал можно продолжать мойку для операций циркуляции и промывки
     P_SIGNAL_WATER,                     //Сигнал вода в трубе
-    P_RESERV_START,
+    P_SIGNAL_PRERINSE,                 //Сигнал "предварительное ополаскивание"
+    P_SIGNAL_INTERMEDIATE_RINSE,       //Сигнал "промежуточная промывка"
+    P_SIGNAL_POSTRINSE,                //Сигнал "окончательная промывка"
+    P_SIGNAL_PUMP_STOPPED,             //Сигнал "подающий насос остановлен и нет потока"
+    P_SIGNAL_FLOW_TASK,                //Сигнал "задание потока"            
+    P_SIGNAL_TEMP_TASK,                //Сигнал "задание температуры"
+    P_SIGNAL_WASH_ABORTED,             //Сигнал "мойка закончена некорректно"
+    P_RESERV_START,                    //начало резервных параметров
     
 
     STP_QAVS = 119,		//средняя концентрация щелочи
@@ -764,30 +773,41 @@ class cipline_tech_object: public tech_object
 
 
         //Устройства для непосредственного объекта мойки
-        device* dev_upr_ret;				//Сигнал управления возвратным насосом
-        device* dev_m_ret;					//Возвратный насос на моечной станции
-        device* dev_os_object;				//Обратная связь объекта мойки
-        device* dev_os_object_ready;		//Обратная связь объекта мойки 2
-        device* dev_os_object_pause;		//Обратная связь объекта сигнал "пауза"
-        device* dev_os_object_empty;		//Сигнал "объект опорожнен"
-        device* dev_upr_medium_change;		//Сигнал "смена среды"
-        device* dev_upr_caustic;			//Сигнал "щелочь"
-        device* dev_upr_acid;				//Сигнал "кислота"
-        device* dev_upr_water;              //Сигнал "вода в трубе"
-        device* dev_upr_desinfection;		//Сигнал "дезинфекция"
-        device* dev_upr_cip_ready;			//Сигнал "готовность к мойке"
-        device* dev_upr_cip_in_progress;	//Сигнал "готовность к мойке"
-        device* dev_upr_cip_finished;		//Сигнал "мойка окончена"
-        device* dev_upr_cip_finished2;		//Сигнал "мойка окончена 2"
-        device* dev_ai_pump_frequency;		//Задание частоты подающего насоса
-        device* dev_ai_pump_feedback;		//Уровень для контроля подающего насоса
-        device* dev_upr_sanitizer_pump;     //Управление насосом подачи дезинфицирующего средства
-        device* dev_upr_circulation;        //Сигнал "Циркуляция"
-        device* dev_os_pump_can_run;           //Сигнал, запрещающий включение подающего насоса.
-        device* dev_ls_ret_pump;            //Сигнал уровня перед возвратным насосом
-        device* dev_os_cip_ready;           //Сигнал "мойка готова" от объекта
-        device* dev_os_can_continue;        //Сигнал "можно переходить на другой шаг" на операциях циркуляции и доп. ополаскиваниии
+        device* dev_upr_ret;			        //Сигнал управления возвратным насосом
+        device* dev_m_ret;				        //Возвратный насос на моечной станции
+        device* dev_os_object;			        //Обратная связь объекта мойки
+        device* dev_os_object_ready;	        //Обратная связь объекта мойки 2
+        device* dev_os_object_pause;	        //Обратная связь объекта сигнал "пауза"
+        device* dev_os_object_empty;	        //Сигнал "объект опорожнен"
+        device* dev_upr_medium_change;	        //Сигнал "смена среды"
+        device* dev_upr_caustic;		        //Сигнал "щелочь"
+        device* dev_upr_acid;			        //Сигнал "кислота"
+        device* dev_upr_water;                  //Сигнал "вода в трубе"
+        device* dev_upr_desinfection;	        //Сигнал "дезинфекция"
+        device* dev_upr_cip_ready;		        //Сигнал "готовность к мойке"
+        device* dev_upr_cip_in_progress;        //Сигнал "готовность к мойке"
+        device* dev_upr_cip_finished;	        //Сигнал "мойка окончена"
+        device* dev_upr_cip_finished2;	        //Сигнал "мойка окончена 2"
+        device* dev_ai_pump_frequency;	        //Задание частоты подающего насоса
+        device* dev_ai_pump_feedback;	        //Уровень для контроля подающего насоса
+        device* dev_upr_sanitizer_pump;         //Управление насосом подачи дезинфицирующего средства
+        device* dev_upr_circulation;            //Сигнал "Циркуляция"
+        device* dev_os_pump_can_run;            //Сигнал, запрещающий включение подающего насоса.
+        device* dev_ls_ret_pump;                //Сигнал уровня перед возвратным насосом
+        device* dev_os_cip_ready;               //Сигнал "мойка готова" от объекта
+        device* dev_os_can_continue;            //Сигнал "можно переходить на другой шаг" на операциях циркуляции и доп. ополаскиваниии
+
+        device* dev_upr_prerinse;               //Сигнал "предварительное ополаскивание"
+        device* dev_upr_intermediate_rinse;     //Сигнал "промежуточная промывка"
+        device* dev_upr_postrinse;              //Сигнал "окончательная промывка"
+        device* dev_upr_pump_stopped;           //Сигнал "подающий насос остановлен и нет потока"
+        device* dev_ao_flow_task;               //Сигнал "задание потока"            
+        device* dev_ao_temp_task;               //Сигнал "задание температуры"
+        device* dev_upr_wash_aborted;           //Сигнал "мойка закончена некорректно"
+
         int init_object_devices();			//Функция для инициализации устройств объекта мойки
+        int check_DI(device*& outdev, int parno);
+        int check_DO(device*& outdev, int parno);
         //----------------------------------------------
 
         static int msa_number;

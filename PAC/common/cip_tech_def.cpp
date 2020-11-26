@@ -182,6 +182,14 @@ cipline_tech_object::cipline_tech_object(const char* name, u_int number, u_int t
     dev_os_pump_can_run = 0;
     dev_os_can_continue = 0;
 
+    dev_upr_prerinse = 0;
+    dev_upr_intermediate_rinse = 0;
+    dev_upr_postrinse = 0;
+    dev_upr_pump_stopped = 0;
+    dev_ao_flow_task = 0;
+    dev_ao_temp_task = 0;
+    dev_upr_wash_aborted = 0;
+
     pumpflag = 0;
     pumptimer = get_millisec();
 
@@ -3220,6 +3228,34 @@ void cipline_tech_object::_ResetLinesDevicesBeforeReset( void )
         {
         dev_upr_desinfection->off();
         }
+    if (dev_upr_prerinse)
+        {
+        dev_upr_prerinse->off();
+        }
+    if (dev_upr_intermediate_rinse)
+        {
+        dev_upr_intermediate_rinse->off();
+        }
+    if (dev_upr_postrinse)
+        {
+        dev_upr_postrinse->off();
+        }
+    if (dev_upr_pump_stopped)
+        {
+        dev_upr_pump_stopped->off();
+        }
+    if (dev_upr_wash_aborted)
+        {
+        dev_upr_wash_aborted->off();
+        }
+    if (dev_ao_flow_task)
+        {
+        dev_ao_flow_task->set_value(0);
+        }
+    if (dev_ao_temp_task)
+        {
+        dev_ao_temp_task->set_value(0);
+        }
     dev_upr_circulation = 0;
     dev_upr_cip_in_progress = 0;
     dev_upr_ret = 0;
@@ -3245,6 +3281,15 @@ void cipline_tech_object::_ResetLinesDevicesBeforeReset( void )
     dev_ai_pump_frequency = 0;
     dev_ls_ret_pump = 0;
     dev_os_can_continue = 0;
+
+    dev_upr_prerinse = 0;
+    dev_upr_intermediate_rinse = 0;
+    dev_upr_postrinse = 0;
+    dev_upr_pump_stopped = 0;
+    dev_ao_flow_task = 0;
+    dev_ao_temp_task = 0;
+    dev_upr_wash_aborted = 0;
+
     no_liquid_is_warning = 0;
     no_liquid_phase = 0;
     pidf_override = false;
@@ -5738,7 +5783,7 @@ int cipline_tech_object::_DoseRR( int what )
 int cipline_tech_object::init_object_devices()
     {
     u_int dev_no;
-    char devname[20] = {0};
+    char devname[MAX_DEV_NAME] = {0};
     device* dev;
 
     unsigned long circflag = (unsigned long)(rt_par_float[P_PODP_CIRC]);
@@ -6538,8 +6583,95 @@ int cipline_tech_object::init_object_devices()
         {
         dev_ls_ret_pump = 0;
         }
+
+    if (check_DO(dev_upr_prerinse, P_SIGNAL_PRERINSE)) return -1;
+
     return 0;
     }
+
+    int cipline_tech_object::check_DI(device*& outdev, int parno)
+        {
+        u_int dev_no = (u_int)rt_par_float[parno];
+        char devname[MAX_DEV_NAME] = {0};
+        device* dev;
+        if (dev_no > 0)
+            {
+            sprintf(devname, "LINE%dDI%d", nmr, dev_no);
+            dev = (device*)DI(devname);
+            if (dev->get_serial_n() > 0)
+                {
+                outdev = dev;
+                }
+            else
+                {
+                dev = (device*)(DI(dev_no));
+                if (dev->get_serial_n() > 0)
+                    {
+                    outdev = dev;
+                    }
+                else
+                    {
+                    dev = DEVICE(dev_no);
+                    if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DI)
+                        {
+                        outdev = dev;
+                        }
+                    else
+                        {
+                        outdev = 0;
+                        return -1;
+                        }
+                    }
+                }
+            }
+        else
+            {
+            outdev = 0;
+            }
+        return 0;
+        }
+
+    int cipline_tech_object::check_DO(device*& outdev, int parno)
+        {
+        u_int dev_no = (u_int)rt_par_float[parno];
+        char devname[MAX_DEV_NAME] = { 0 };
+        device* dev;
+        if (dev_no > 0)
+            {
+            sprintf(devname, "LINE%dDO%d", nmr, dev_no);
+            dev = (device*)DI(devname);
+            if (dev->get_serial_n() > 0)
+                {
+                outdev = dev;
+                }
+            else
+                {
+                dev = (device*)(DI(dev_no));
+                if (dev->get_serial_n() > 0)
+                    {
+                    outdev = dev;
+                    }
+                else
+                    {
+                    dev = DEVICE(dev_no);
+                    if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
+                        {
+                        outdev = dev;
+                        }
+                    else
+                        {
+                        outdev = 0;
+                        return -1;
+                        }
+                    }
+                }
+            }
+        else
+            {
+            outdev = 0;
+            }
+        return 0;
+        }
 
 cipline_tech_object* cipline_tech_object::Mdls[10] = {0,0,0,0,0,0,0,0,0,0};
 

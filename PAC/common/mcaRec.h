@@ -128,7 +128,14 @@ class TRecipeManager
         RV_SIGNAL_CIPEND2,               //Сигнал "Мойка окончена 2"
         RV_SIGNAL_CAN_CONTINUE,          //Сигнал можно продолжать мойку для операций циркуляции и промывки
         RV_SIGNAL_WATER,                 //Сигнал "вода в трубе"
-        RV_RESERV_START, //начало резервных параметров
+        RV_SIGNAL_PRERINSE,                 //Сигнал "предварительное ополаскивание"
+        RV_SIGNAL_INTERMEDIATE_RINSE,       //Сигнал "промежуточная промывка"
+        RV_SIGNAL_POSTRINSE,                //Сигнал "окончательная промывка"
+        RV_SIGNAL_PUMP_STOPPED,             //Сигнал "подающий насос остановлен и нет потока"
+        RV_SIGNAL_FLOW_TASK,                //Сигнал "задание потока"            
+        RV_SIGNAL_TEMP_TASK,                //Сигнал "задание температуры"
+        RV_SIGNAL_WASH_ABORTED,             //Сигнал "мойка закончена некорректно"
+        RV_RESERV_START,                    //начало резервных параметров
 
         RV_WORKCENTER = 104,		//Номер рабочего центра объекта мойки
         RV_FIRSTVALVEON = 105,
