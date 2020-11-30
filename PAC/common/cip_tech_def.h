@@ -607,6 +607,16 @@ class cipline_tech_object: public tech_object
 
         //Флаг формата описания устройств
         char is_old_definition;
+        //В программе мойки есть мойка кислотой
+        bool program_has_acid;
+        //В программе мойки есть мойка щелочью
+        bool program_has_caustic;
+        //В программе мойки есть дезинфекция
+        bool program_has_desinfection;
+        //В программе мойки есть холодная дезинфекция
+        bool program_has_cold_desinfection;
+        //Программа была завершена некорректно
+        bool program_was_terminated;
 
         //работа с параметрами
         static saved_params<float, true>* parpar;

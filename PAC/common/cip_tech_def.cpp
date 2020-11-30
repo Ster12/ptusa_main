@@ -103,6 +103,11 @@ cipline_tech_object::cipline_tech_object(const char* name, u_int number, u_int t
         {
         SAV[i]=new TSav;
         }
+    program_has_acid = false;
+    program_has_caustic = false;
+    program_has_cold_desinfection = false;
+    program_has_desinfection = false;
+    program_was_terminated = false;
     is_reset = false;
     no_acid_wash_max = 0;
     pidf_override = false;
@@ -1916,6 +1921,26 @@ void cipline_tech_object::_StopDev( void )
         {
         dev_upr_circulation->off();
         }
+    if (dev_upr_prerinse)
+        {
+        dev_upr_prerinse->off();
+        }
+    if (dev_upr_intermediate_rinse)
+        {
+        dev_upr_intermediate_rinse->off();
+        }
+    if (dev_upr_postrinse)
+        {
+        dev_upr_postrinse->off();
+        }
+    if (dev_ao_flow_task)
+        {
+        dev_ao_flow_task->set_value(0);
+        }
+    if (dev_ao_temp_task)
+        {
+        dev_ao_temp_task->set_value(0);
+        }
     if (scenabled && scline == nmr)
         {
         VSMG->off();
@@ -2121,6 +2146,7 @@ int cipline_tech_object::EvalCommands()
                 rt_par_float[STP_RESETSTEP] = curstep; //шаг, на котором было сброшено
                 Stop(curstep);
                 curstep = 555;
+                program_was_terminated = true;
                 is_reset = true;
                 InitStep(curstep, 0);
                 state = 1;
@@ -2172,6 +2198,7 @@ int cipline_tech_object::EvalCommands()
                 }
             if (state == 0 && (loadedRecipe >= 0 || rt_par_float[P_PROGRAM] >= SPROG_ACID_PREPARATION) && rt_par_float[P_PROGRAM] > 0  )
                 {
+                program_was_terminated = false;
                 if (scenabled)
                     {
                     if (scline > 0 && scline != nmr) //если идет самоочистка танков, то нельзя включить мойку на других линиях.
@@ -2894,11 +2921,16 @@ int cipline_tech_object::_DoStep( int step_to_do )
     bool is_caustic = false;
     bool is_acid = false;
     bool is_water = false;
+    bool is_prerinse = false;
+    bool is_intermediate_rinse = false;
+    bool is_postrinse = false;
 
     if (step_to_do >= 24 && step_to_do <= 33) is_caustic = true;
     if (step_to_do >= 44 && step_to_do <= 53) is_acid = true;
 
     if (step_to_do > 5 && !is_acid && !is_caustic) is_water = true;
+
+    if (step_to_do > 5 && step_to_do < 24) is_prerinse = true;
 
     if (dev_upr_caustic)
         {
