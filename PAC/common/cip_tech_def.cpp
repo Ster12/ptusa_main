@@ -6617,6 +6617,8 @@ int cipline_tech_object::init_object_devices()
         }
 
     if (check_DO(dev_upr_prerinse, P_SIGNAL_PRERINSE)) return -1;
+    if (check_DO(dev_upr_intermediate_rinse, P_SIGNAL_INTERMEDIATE_RINSE)) return -1;
+    if (check_DO(dev_upr_postrinse, P_SIGNAL_POSTRINSE)) return -1;
 
     return 0;
     }
@@ -6678,7 +6680,7 @@ int cipline_tech_object::init_object_devices()
                 }
             else
                 {
-                dev = (device*)(DI(dev_no));
+                dev = (device*)(DO(dev_no));
                 if (dev->get_serial_n() > 0)
                     {
                     outdev = dev;
