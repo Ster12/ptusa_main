@@ -2932,6 +2932,18 @@ int cipline_tech_object::_DoStep( int step_to_do )
 
     if (step_to_do > 5 && step_to_do < 24) is_prerinse = true;
 
+    if (dev_upr_prerinse)
+        {
+        if (is_prerinse) dev_upr_prerinse->on(); else dev_upr_prerinse->off();
+        }
+    if (dev_upr_intermediate_rinse)
+        {
+        if (is_intermediate_rinse) dev_upr_intermediate_rinse->on(); else dev_upr_intermediate_rinse->off();
+        }
+    if (dev_upr_postrinse)
+        {
+        if (is_postrinse) dev_upr_postrinse->on(); else dev_upr_postrinse->off();
+        }
     if (dev_upr_caustic)
         {
         if (is_caustic) dev_upr_caustic->on(); else dev_upr_caustic->off();
@@ -3325,6 +3337,12 @@ void cipline_tech_object::_ResetLinesDevicesBeforeReset( void )
     no_liquid_is_warning = 0;
     no_liquid_phase = 0;
     pidf_override = false;
+
+    program_has_acid = false;
+    program_has_caustic = false;
+    program_has_cold_desinfection = false;
+    program_has_desinfection = false;
+    program_was_terminated = false;
     //Переменные для циркуляции
     circ_tank_s = 0;
     circ_tank_k = 0;
@@ -5814,10 +5832,6 @@ int cipline_tech_object::_DoseRR( int what )
 
 int cipline_tech_object::init_object_devices()
     {
-    u_int dev_no;
-    char devname[MAX_DEV_NAME] = {0};
-    device* dev;
-
     unsigned long circflag = (unsigned long)(rt_par_float[P_PODP_CIRC]);
     circ_tank_s = circflag & CIRC_TANK_S ? 1:0;
     circ_tank_k = circflag & CIRC_TANK_K ? 1:0;
@@ -5847,778 +5861,63 @@ int cipline_tech_object::init_object_devices()
         printf("init_object_devices\n\r");
         }
     //Обратная связь
-    dev_no = (u_int)rt_par_float[P_OS];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDI%d", nmr, dev_no);
-        dev = (device*)DI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_os_object = dev;
-            }
-        else
-            {
-            dev = (device*)(DI(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_os_object = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DI)
-                    {
-                    dev_os_object = dev;
-                    }
-                else
-                    {
-                    dev_os_object = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_os_object = 0;
-        }
+    if (check_DI(dev_os_object, P_OS)) return -1;
     //Обратная связь №2(готовность объекта к мойке)
-    dev_no = (u_int)rt_par_float[P_SIGNAL_OBJECT_READY];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDI%d", nmr, dev_no);
-        dev = (device*)DI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_os_object_ready = dev;
-            }
-        else
-            {
-            dev = (device*)(DI(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_os_object_ready = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DI)
-                    {
-                    dev_os_object_ready = dev;
-                    }
-                else
-                    {
-                    dev_os_object_ready = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_os_object_ready = 0;
-        }
+    if (check_DI(dev_os_object_ready, P_SIGNAL_OBJECT_READY)) return -1;
     //Обратная связь №3(готовность объекта к мойке)
-    dev_no = (u_int)rt_par_float[P_SIGNAL_IN_CIP_READY];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDI%d", nmr, dev_no);
-        dev = (device*)DI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_os_cip_ready = dev;
-            }
-        else
-            {
-            dev = (device*)(DI(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_os_cip_ready = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DI)
-                    {
-                    dev_os_cip_ready = dev;
-                    }
-                else
-                    {
-                    dev_os_cip_ready = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_os_cip_ready = 0;
-        }
+    if (check_DI(dev_os_cip_ready, P_SIGNAL_IN_CIP_READY)) return -1;
     //Сигнал что можно перейти к следующей операции(флипы окончены)
-    dev_no = (u_int)rt_par_float[P_SIGNAL_CAN_CONTINUE];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDI%d", nmr, dev_no);
-        dev = (device*)DI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_os_can_continue = dev;
-            }
-        else
-            {
-            dev = (device*)(DI(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_os_can_continue = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DI)
-                    {
-                    dev_os_can_continue = dev;
-                    }
-                else
-                    {
-                    dev_os_can_continue = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_os_can_continue = 0;
-        }
+    if (check_DI(dev_os_can_continue, P_SIGNAL_CAN_CONTINUE)) return -1;
     //Обратная связь - пауза(остановка мойки)
-    dev_no = (u_int)rt_par_float[P_SIGNAL_OBJECT_PAUSE];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDI%d", nmr, dev_no);
-        dev = (device*)DI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_os_object_pause = dev;
-            }
-        else
-            {
-            dev = (device*)(DI(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_os_object_pause = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DI)
-                    {
-                    dev_os_object_pause = dev;
-                    }
-                else
-                    {
-                    dev_os_object_pause = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_os_object_pause = 0;
-        }
+    if (check_DI(dev_os_object_pause, P_SIGNAL_OBJECT_PAUSE)) return -1;
     //Возвратный насос
-    dev_no = (u_int)rt_par_float[P_N_RET];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dM%d", nmr, dev_no);
-        dev = (device*)M(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_m_ret = dev;
-            }
-        else
-            {
-            dev = (device*)(M(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_m_ret = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_M)
-                    {
-                    dev_m_ret = dev;
-                    }
-                else
-                    {
-                    dev_m_ret = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_m_ret = 0;
-        }
+    if (check_M(dev_m_ret, P_N_RET)) return -1;
     //Сигнал управления возвратным насосом
-    dev_no = (u_int)rt_par_float[P_N_UPR];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_ret = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_ret = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_ret = dev;
-                    }
-                else
-                    {
-                    dev_upr_ret = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_ret = 0;
-        }
+    if (check_DO(dev_upr_ret, P_N_UPR)) return -1;
     //Сигнал управления насосом подачи дезинфицирующего средства
-    dev_no = (u_int)rt_par_float[P_SIGNAL_SANITIZER_PUMP];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_sanitizer_pump = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_sanitizer_pump = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_sanitizer_pump = dev;
-                    }
-                else
-                    {
-                    dev_upr_sanitizer_pump = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_sanitizer_pump = 0;
-        }
+    if (check_DO(dev_upr_sanitizer_pump, P_SIGNAL_SANITIZER_PUMP)) return -1;
     //Смена среды
-    dev_no = (u_int)rt_par_float[P_SIGNAL_MEDIUM_CHANGE];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_medium_change = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_medium_change = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_medium_change = dev;
-                    }
-                else
-                    {
-                    dev_upr_medium_change = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_medium_change = 0;
-        }
+    if (check_DO(dev_upr_medium_change, P_SIGNAL_MEDIUM_CHANGE)) return -1;
     //Объект опорожнен
-    dev_no = (u_int)rt_par_float[P_OBJ_EMPTY];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDI%d", nmr, dev_no);
-        dev = (device*)DI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_os_object_empty = dev;
-            }
-        else
-            {
-            dev = (device*)(DI(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_os_object_empty = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DI)
-                    {
-                    dev_os_object_empty = dev;
-                    }
-                else
-                    {
-                    dev_os_object_empty = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_os_object_empty = 0;
-        }
+    if (check_DI(dev_os_object_empty, P_OBJ_EMPTY)) return -1;
     //Щелочь
-    dev_no = (u_int)rt_par_float[P_SIGNAL_CAUSTIC];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_caustic = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_caustic = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_caustic = dev;
-                    }
-                else
-                    {
-                    dev_upr_caustic = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_caustic = 0;
-        }
+    if (check_DO(dev_upr_caustic, P_SIGNAL_CAUSTIC)) return -1;
     //Кислота
-    dev_no = (u_int)rt_par_float[P_SIGNAL_ACID];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_acid = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_acid = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_acid = dev;
-                    }
-                else
-                    {
-                    dev_upr_acid = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_acid = 0;
-        }
+    if (check_DO(dev_upr_acid, P_SIGNAL_ACID)) return -1;
     //Вода в трубе
-    dev_no = (u_int)rt_par_float[P_SIGNAL_WATER];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_water = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_water = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_water = dev;
-                    }
-                else
-                    {
-                    dev_upr_water = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_water = 0;
-        }
+    if (check_DO(dev_upr_water, P_SIGNAL_WATER)) return -1;
     //Дезинфекция
-    dev_no = (u_int)rt_par_float[P_SIGNAL_DESINSECTION];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_desinfection = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_desinfection = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_desinfection = dev;
-                    }
-                else
-                    {
-                    dev_upr_desinfection = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_desinfection = 0;
-        }
+    if (check_DO(dev_upr_desinfection, P_SIGNAL_DESINSECTION)) return -1;
     //Циркуляция
-    dev_no = (u_int)rt_par_float[P_SIGNAL_CIRCULATION];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_circulation = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_circulation = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_circulation = dev;
-                    }
-                else
-                    {
-                    dev_upr_circulation = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_circulation = 0;
-        }
+    if (check_DO(dev_upr_circulation, P_SIGNAL_CIRCULATION)) return -1;
     //Мойка окончена
-    dev_no = (u_int)rt_par_float[P_SIGNAL_CIPEND];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_cip_finished = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_cip_finished = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_cip_finished = dev;
-                    }
-                else
-                    {
-                    dev_upr_cip_finished = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_cip_finished = 0;
-        }
+    if (check_DO(dev_upr_cip_finished, P_SIGNAL_CIPEND)) return -1;
     //Мойка окончена 2
-    dev_no = (u_int)rt_par_float[P_SIGNAL_CIPEND2];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_cip_finished2 = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_cip_finished2 = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_cip_finished2 = dev;
-                    }
-                else
-                    {
-                    dev_upr_cip_finished2 = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_cip_finished2 = 0;
-        }
+    if (check_DO(dev_upr_cip_finished2, P_SIGNAL_CIPEND2)) return -1;
     //Мойка идет
-    dev_no = (u_int)rt_par_float[P_SIGNAL_CIP_IN_PROGRESS];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-        dev = (device*)DO(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_upr_cip_in_progress = dev;
-            }
-        else
-            {
-            dev = (device*)(DO(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_upr_cip_in_progress = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
-                    {
-                    dev_upr_cip_in_progress = dev;
-                    }
-                else
-                    {
-                    dev_upr_cip_in_progress = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_upr_cip_in_progress = 0;
-        }
+    if (check_DO(dev_upr_cip_in_progress, P_SIGNAL_CIP_IN_PROGRESS)) return -1;
     //Сигнал управления производительностью подающего насоса
-    dev_no = (u_int)rt_par_float[P_SIGNAL_PUMP_CONTROL];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dAI%d", nmr, dev_no);
-        dev = (device*)AI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_ai_pump_frequency = dev;
-            }
-        else
-            {
-            dev = DEVICE(dev_no);
-            if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_AI)
-                {
-                dev_ai_pump_frequency = dev;
-                }
-            else
-                {
-                dev_ai_pump_frequency = 0;
-                return -1;
-                }
-            }
-        }
-    else
-        {
-        dev_ai_pump_frequency = 0;
-        }
+    if (check_AI(dev_ai_pump_frequency, P_SIGNAL_PUMP_CONTROL)) return -1;
     //Сигнал уровня для управления производительностью подающего насоса
-    dev_no = (u_int)rt_par_float[P_SIGNAL_PUMP_CONTROL_FEEDBACK];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dAI%d", nmr, dev_no);
-        dev = (device*)AI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_ai_pump_feedback = dev;
-            }
-        else
-            {
-            dev = DEVICE(dev_no);
-            if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_AI)
-                {
-                dev_ai_pump_feedback = dev;
-                }
-            else
-                {
-                dev_ai_pump_feedback = 0;
-                return -1;
-                }
-            }
-        }
-    else
-        {
-        dev_ai_pump_feedback = 0;
-        }
+    if (check_AI(dev_ai_pump_feedback, P_SIGNAL_PUMP_CONTROL_FEEDBACK)) return -1;
     //Сигнал, запрещающий включение подающего насоса.
-    dev_no = (u_int)rt_par_float[P_SIGNAL_PUMP_CAN_RUN];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dDI%d", nmr, dev_no);
-        dev = (device*)DI(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_os_pump_can_run = dev;
-            }
-        else
-            {
-            dev = (device*)(DI(dev_no));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_os_pump_can_run = dev;
-                }
-            else
-                {
-                dev = DEVICE(dev_no);
-                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DI)
-                    {
-                    dev_os_pump_can_run = dev;
-                    }
-                else
-                    {
-                    dev_os_pump_can_run = 0;
-                    return -1;
-                    }
-                }
-            }
-        }
-    else
-        {
-        dev_os_pump_can_run = 0;
-        }
+    if (check_DI(dev_os_pump_can_run, P_SIGNAL_PUMP_CAN_RUN)) return -1;
     //Сигнал уровня перед возвратным насосом.
-    dev_no = (u_int)rt_par_float[P_SIGNAL_RET_PUMP_SENSOR];
-    if (dev_no > 0)
-        {
-        sprintf(devname, "LINE%dLS%d", nmr, dev_no);
-        dev = (device*)LS(devname);
-        if (dev->get_serial_n() > 0)
-            {
-            dev_ls_ret_pump = dev;
-            }
-        else
-            {
-            sprintf(devname, "LINE%dDI%d", nmr, dev_no);
-            dev = (device*)(DI(devname));
-            if (dev->get_serial_n() > 0)
-                {
-                dev_ls_ret_pump = dev;
-                }
-            else
-                {
-                dev_ls_ret_pump = 0;
-                return -1;
-                }
-            }
-        }
-    else
-        {
-        dev_ls_ret_pump = 0;
-        }
-
+    if (check_LS(dev_ls_ret_pump, P_SIGNAL_RET_PUMP_SENSOR)) return -1;
+    //Сигнал предварительной промывки 
     if (check_DO(dev_upr_prerinse, P_SIGNAL_PRERINSE)) return -1;
+    //Сигнал промежуточной промывки
     if (check_DO(dev_upr_intermediate_rinse, P_SIGNAL_INTERMEDIATE_RINSE)) return -1;
+    //Сигнал окончательной промывки
     if (check_DO(dev_upr_postrinse, P_SIGNAL_POSTRINSE)) return -1;
+    //Сигнал аварийного завершения мойки
+    if (check_DO(dev_upr_wash_aborted, P_SIGNAL_WASH_ABORTED)) return -1;
+    //Сигнал остановки подающего насоса
+    if (check_DO(dev_upr_pump_stopped, P_SIGNAL_PUMP_STOPPED)) return -1;
+    //Задание подающему насосу
+    if (check_AO(dev_ao_flow_task, P_SIGNAL_FLOW_TASK)) return -1;
+    //Задание подогрева
+    if (check_AO(dev_ao_temp_task, P_SIGNAL_TEMP_TASK)) return -1;
 
     return 0;
     }
@@ -6673,7 +5972,7 @@ int cipline_tech_object::init_object_devices()
         if (dev_no > 0)
             {
             sprintf(devname, "LINE%dDO%d", nmr, dev_no);
-            dev = (device*)DI(devname);
+            dev = (device*)DO(devname);
             if (dev->get_serial_n() > 0)
                 {
                 outdev = dev;
@@ -6689,6 +5988,159 @@ int cipline_tech_object::init_object_devices()
                     {
                     dev = DEVICE(dev_no);
                     if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_DO)
+                        {
+                        outdev = dev;
+                        }
+                    else
+                        {
+                        outdev = 0;
+                        return -1;
+                        }
+                    }
+                }
+            }
+        else
+            {
+            outdev = 0;
+            }
+        return 0;
+        }
+
+    int cipline_tech_object::check_AI(device*& outdev, int parno)
+        {
+        u_int dev_no = (u_int)rt_par_float[parno];
+        char devname[MAX_DEV_NAME] = { 0 };
+        device* dev;
+        if (dev_no > 0)
+            {
+            sprintf(devname, "LINE%dAI%d", nmr, dev_no);
+            dev = (device*)AI(devname);
+            if (dev->get_serial_n() > 0)
+                {
+                outdev = dev;
+                }
+            else
+                {
+                dev = DEVICE(dev_no);
+                if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_AI)
+                    {
+                    outdev = dev;
+                    }
+                else
+                    {
+                    outdev = 0;
+                    return -1;
+                    }
+                }
+            }
+        else
+            {
+            outdev = 0;
+            }
+        return 0;
+        }
+
+    int cipline_tech_object::check_AO(device*& outdev, int parno)
+        {
+        u_int dev_no = (u_int)rt_par_float[parno];
+        char devname[MAX_DEV_NAME] = { 0 };
+        device* dev;
+        if (dev_no > 0)
+            {
+            sprintf(devname, "LINE%dAO%d", nmr, dev_no);
+            dev = (device*)AO(devname);
+            if (dev->get_serial_n() > 0)
+                {
+                outdev = dev;
+                }
+            else
+                {
+                dev = (device*)(AO(dev_no));
+                if (dev->get_serial_n() > 0)
+                    {
+                    outdev = dev;
+                    }
+                else
+                    {
+                    dev = DEVICE(dev_no);
+                    if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_AO)
+                        {
+                        outdev = dev;
+                        }
+                    else
+                        {
+                        outdev = 0;
+                        return -1;
+                        }
+                    }
+                }
+            }
+        else
+            {
+            outdev = 0;
+            }
+        return 0;
+        }
+
+    int cipline_tech_object::check_LS(device*& outdev, int parno)
+        {
+        u_int dev_no = (u_int)rt_par_float[parno];
+        char devname[MAX_DEV_NAME] = { 0 };
+        device* dev;
+        if (dev_no > 0)
+            {
+            sprintf(devname, "LINE%dLS%d", nmr, dev_no);
+            dev = (device*)LS(devname);
+            if (dev->get_serial_n() > 0)
+                {
+                outdev = dev;
+                }
+            else
+                {
+                sprintf(devname, "LINE%dDI%d", nmr, dev_no);
+                dev = (device*)DI(devname);
+                if (dev->get_serial_n() > 0)
+                    {
+                    outdev = dev;
+                    }
+                else
+                    {
+                    outdev = 0;
+                    return -1;
+                    }
+                }
+            }
+        else
+            {
+            outdev = 0;
+            }
+        return 0;
+        }
+
+    int cipline_tech_object::check_M(device*& outdev, int parno)
+        {
+        u_int dev_no = (u_int)rt_par_float[parno];
+        char devname[MAX_DEV_NAME] = { 0 };
+        device* dev;
+        if (dev_no > 0)
+            {
+            sprintf(devname, "LINE%dM%d", nmr, dev_no);
+            dev = (device*)M(devname);
+            if (dev->get_serial_n() > 0)
+                {
+                outdev = dev;
+                }
+            else
+                {
+                dev = (device*)(M(dev_no));
+                if (dev->get_serial_n() > 0)
+                    {
+                    outdev = dev;
+                    }
+                else
+                    {
+                    dev = DEVICE(dev_no);
+                    if (dev->get_serial_n() > 0 && dev->get_type() == device::DT_M)
                         {
                         outdev = dev;
                         }

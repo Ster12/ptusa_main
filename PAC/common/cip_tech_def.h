@@ -818,6 +818,10 @@ class cipline_tech_object: public tech_object
         int init_object_devices();			//Функция для инициализации устройств объекта мойки
         int check_DI(device*& outdev, int parno);
         int check_DO(device*& outdev, int parno);
+        int check_AI(device*& outdev, int parno);
+        int check_AO(device*& outdev, int parno);
+        int check_LS(device*& outdev, int parno);
+        int check_M(device*& outdev, int parno);
         //----------------------------------------------
 
         static int msa_number;
