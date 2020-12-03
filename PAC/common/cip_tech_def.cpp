@@ -2891,6 +2891,16 @@ int cipline_tech_object::EvalPIDS()
                     }
                 }
             }
+
+        if (dev_ao_flow_task)
+        {
+            dev_ao_flow_task->set_value(rt_par_float[P_ZAD_FLOW]);
+        }
+
+        if (dev_ao_temp_task)
+        {
+            dev_ao_temp_task->set_value(rt_par_float[P_ZAD_PODOGR]);
+        }
      
         }
    
