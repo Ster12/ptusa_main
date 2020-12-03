@@ -3419,7 +3419,45 @@ int cipline_tech_object::SetCommand( int command )
 
 int cipline_tech_object::_LoadProgram( void )
     {
-    curprg=getNexpPrg(curprg, ( int ) rt_par_float[P_PROGRAM]);
+    int selectedprogram = (int)rt_par_float[P_PROGRAM];
+    if (selectedprogram & (1 << PRG_K))
+        {
+        program_has_acid = true;
+        }
+    else
+        {
+        program_has_acid = false;
+        }
+
+    if (selectedprogram & ((1 << PRG_S) + (1 << PRG_S1)))
+        {
+        program_has_caustic = true;
+        }
+    else
+        {
+        program_has_caustic = false;
+        }
+
+    if (selectedprogram & (1 << PRG_D))
+        {
+        program_has_desinfection = true;
+        }
+    else
+        {
+        program_has_desinfection = false;
+        }
+
+    if (selectedprogram & (1 << PRG_SANITIZER))
+        {
+        program_has_cold_desinfection = true;
+        }
+    else
+        {
+        program_has_cold_desinfection = false;
+        }
+
+
+    curprg=getNexpPrg(curprg, selectedprogram);
     switch (curprg)
         {
         case PRG_PRO:
