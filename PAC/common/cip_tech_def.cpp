@@ -2800,7 +2800,21 @@ int cipline_tech_object::_InitStep( int step_to_init, int not_first_call )
                 }
             if (dev_upr_cip_finished2)
                 {
-                dev_upr_cip_finished2->on();
+                if (dev_upr_wash_aborted)
+                    {
+                    if (program_was_terminated)
+                        {
+                        dev_upr_wash_aborted->on();
+                        }
+                    else
+                        {
+                        dev_upr_cip_finished2->on();
+                        }
+                    }
+                else
+                    {
+                    dev_upr_cip_finished2->on();
+                    }
                 }
             enddelayTimer = get_millisec();
             return 0;
@@ -2848,9 +2862,24 @@ int cipline_tech_object::EvalPIDS()
             flagnplaststate = true;
             NP->off();
             NP->set_value(0);
+            if (dev_upr_pump_stopped)
+                {
+                if (cnt->get_flow() < rt_par_float[P_R_NO_FLOW])
+                    {
+                    dev_upr_pump_stopped->on();
+                    }
+                else
+                    {
+                    dev_upr_pump_stopped->off();
+                    }
+                }
             }
         else
             {
+            if (dev_upr_pump_stopped)
+                {
+                dev_upr_pump_stopped->off();
+                }
             if (flagnplaststate)
                 {
                 
