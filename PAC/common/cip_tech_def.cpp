@@ -2840,7 +2840,14 @@ int cipline_tech_object::EvalPIDS()
             }
         else
             {
-            PIDF->eval();
+            if (dev_ai_pump_feedback)
+                {
+                PIDF->eval(cnt->get_flow(), dev_ai_pump_feedback->get_value());
+                }
+            else
+                {
+                PIDF->eval();
+                }
             }
         }
 
@@ -2969,27 +2976,86 @@ int cipline_tech_object::_DoStep( int step_to_do )
 
     if (step_to_do > 5 && !is_acid && !is_caustic) is_water = true;
 
-    if (step_to_do > 5 && step_to_do < 24) is_prerinse = true;
+    if (step_to_do > 5 && step_to_do <= 22) is_prerinse = true;
 
-    if (dev_upr_prerinse)
+    if (step_to_do >= 35 && step_to_do <= 42)
         {
-        if (is_prerinse) dev_upr_prerinse->on(); else dev_upr_prerinse->off();
+        if (program_has_caustic)
+            {
+            is_intermediate_rinse = true;
+            }
+        else
+            {
+            is_prerinse = true;
+            }
         }
-    if (dev_upr_intermediate_rinse)
+
+    if (step_to_do >= 55 && step_to_do <= 62)
         {
-        if (is_intermediate_rinse) dev_upr_intermediate_rinse->on(); else dev_upr_intermediate_rinse->off();
+        if (program_has_caustic || program_has_acid)
+            {
+            is_intermediate_rinse = true;
+            }
+        else
+            {
+            is_prerinse = true;
+            }
         }
-    if (dev_upr_postrinse)
+
+    if (step_to_do >= 81 && step_to_do <= 91)
         {
-        if (is_postrinse) dev_upr_postrinse->on(); else dev_upr_postrinse->off();
+        is_postrinse = true;
         }
-    if (dev_upr_caustic)
+
+    if (dev_upr_prerinse && dev_upr_prerinse == dev_upr_intermediate_rinse && dev_upr_intermediate_rinse == dev_upr_postrinse)
         {
-        if (is_caustic) dev_upr_caustic->on(); else dev_upr_caustic->off();
+        if (is_prerinse || is_intermediate_rinse || is_postrinse)
+            {
+            dev_upr_prerinse->on();
+            }
+        else
+            {
+            dev_upr_prerinse->off();
+            }
         }
-    if (dev_upr_acid)
+    else
         {
-        if (is_acid) dev_upr_acid->on(); else dev_upr_acid->off();
+        if (dev_upr_prerinse)
+            {
+            if (is_prerinse) dev_upr_prerinse->on(); else dev_upr_prerinse->off();
+            }
+        if (dev_upr_intermediate_rinse)
+            {
+            if (is_intermediate_rinse) dev_upr_intermediate_rinse->on(); else dev_upr_intermediate_rinse->off();
+            }
+        if (dev_upr_postrinse)
+            {
+            if (is_postrinse) dev_upr_postrinse->on(); else dev_upr_postrinse->off();
+            }
+        }
+
+
+    if (dev_upr_caustic && dev_upr_caustic == dev_upr_acid)
+        {
+        if (is_caustic || is_acid)
+            {
+            dev_upr_caustic->on();
+            }
+        else
+            {
+            dev_upr_caustic->off();
+            }
+        }
+    else
+        {
+        if (dev_upr_caustic)
+            {
+            if (is_caustic) dev_upr_caustic->on(); else dev_upr_caustic->off();
+            }
+        if (dev_upr_acid)
+            {
+            if (is_acid) dev_upr_acid->on(); else dev_upr_acid->off();
+            }
         }
     if (dev_upr_water)
         {
@@ -7778,7 +7844,15 @@ void MSAPID::eval(float inputvalue, float task)
         {
         lastEvalInOnState = get_millisec();
         set(task);
-        output->set_value(pid_eval(inputvalue));
+        par[0][task_par_offset] = task;
+        if (0 == task)
+            {
+            output->set_value(0);
+            }
+        else
+            {
+            output->set_value(pid_eval(inputvalue));
+            }
         }
     }
 
