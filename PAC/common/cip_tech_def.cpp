@@ -2974,11 +2974,12 @@ int cipline_tech_object::_DoStep( int step_to_do )
     if (step_to_do >= 24 && step_to_do <= 33) is_caustic = true;
     if (step_to_do >= 44 && step_to_do <= 53) is_acid = true;
 
-    if (step_to_do > 5 && !is_acid && !is_caustic) is_water = true;
 
-    if (step_to_do > 5 && step_to_do <= 22) is_prerinse = true;
+    if (step_to_do == 7 || step_to_do == 8 || step_to_do == 22) is_prerinse = true;
 
-    if (step_to_do >= 35 && step_to_do <= 42)
+    if (step_to_do == 35 || step_to_do == 37 || step_to_do == 55 || step_to_do == 57) is_postrinse = true;
+
+    if (step_to_do == 42)
         {
         if (program_has_caustic)
             {
@@ -2990,22 +2991,12 @@ int cipline_tech_object::_DoStep( int step_to_do )
             }
         }
 
-    if (step_to_do >= 55 && step_to_do <= 62)
-        {
-        if (program_has_caustic || program_has_acid)
-            {
-            is_intermediate_rinse = true;
-            }
-        else
-            {
-            is_prerinse = true;
-            }
-        }
-
-    if (step_to_do >= 81 && step_to_do <= 91)
+    if (step_to_do == 85 || step_to_do == 86)
         {
         is_postrinse = true;
         }
+
+    if (is_prerinse || is_postrinse || is_intermediate_rinse) is_water = true;
 
     if (dev_upr_prerinse && dev_upr_prerinse == dev_upr_intermediate_rinse && dev_upr_intermediate_rinse == dev_upr_postrinse)
         {
