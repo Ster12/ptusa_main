@@ -358,14 +358,16 @@ enum workParameters
     P_SIGNAL_CIPEND2,                   //Сигнал "Мойка окончена 2"
     P_SIGNAL_CAN_CONTINUE,              //Сигнал можно продолжать мойку для операций циркуляции и промывки
     P_SIGNAL_WATER,                     //Сигнал вода в трубе
-    P_SIGNAL_PRERINSE,                 //Сигнал "предварительное ополаскивание"
-    P_SIGNAL_INTERMEDIATE_RINSE,       //Сигнал "промежуточная промывка"
-    P_SIGNAL_POSTRINSE,                //Сигнал "окончательная промывка"
-    P_SIGNAL_PUMP_STOPPED,             //Сигнал "подающий насос остановлен и нет потока"
-    P_SIGNAL_FLOW_TASK,                //Сигнал "задание потока"            
-    P_SIGNAL_TEMP_TASK,                //Сигнал "задание температуры"
-    P_SIGNAL_WASH_ABORTED,             //Сигнал "мойка закончена некорректно"
-    P_RESERV_START,                    //начало резервных параметров
+    P_SIGNAL_PRERINSE,                  //Сигнал "предварительное ополаскивание"
+    P_SIGNAL_INTERMEDIATE_RINSE,        //Сигнал "промежуточная промывка"
+    P_SIGNAL_POSTRINSE,                 //Сигнал "окончательная промывка"
+    P_SIGNAL_PUMP_STOPPED,              //Сигнал "подающий насос остановлен и нет потока"
+    P_SIGNAL_FLOW_TASK,                 //Сигнал "задание потока"            
+    P_SIGNAL_TEMP_TASK,                 //Сигнал "задание температуры"
+    P_SIGNAL_WASH_ABORTED,              //Сигнал "мойка закончена некорректно"
+    P_PRESSURE_CONTROL,                 //Задание давления для регулятора
+    P_DONT_USE_WATER_TANK,              //Не использовать вторичную воду при мойке
+    P_RESERV_START,                     //начало резервных параметров
     
 
     STP_QAVS = 119,		//средняя концентрация щелочи
@@ -771,6 +773,7 @@ class cipline_tech_object: public tech_object
         i_AI_device* Q;
         i_AO_device* ao;
         i_AO_device* PUMPFREQ;
+        i_AI_device* PRESSURE;
         i_DI_device*FL;
         timer* T[TMR_CNT];
         TSav *SAV[SAV_CNT];
@@ -835,7 +838,7 @@ class cipline_tech_object: public tech_object
 
         ////-------------------
         virtual void RHI(void);
-        virtual void PT(void);
+        virtual void PauseTimers(void);
         virtual int SetCommand(int command);
         virtual void ResetWP(void);
         virtual int SetRet(int val);

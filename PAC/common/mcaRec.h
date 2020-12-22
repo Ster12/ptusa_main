@@ -20,7 +20,7 @@
 ///@brief Размер блока памяти в байтах
 #define BLOCK_SIZE 128L
 ///@brief Интервал проверки изменений в рецепте
-#define RECIPE_SAVE_INTERVAL 300000L
+#define RECIPE_SAVE_INTERVAL 60000L
 
 ///@class TRecipeManager mcaRec.h
 ///@brief Класс для хранения и работы с рецептами в энергонезависимой памяти контроллера для МСА
@@ -135,6 +135,8 @@ class TRecipeManager
         RV_SIGNAL_FLOW_TASK,                //Сигнал "задание потока"            
         RV_SIGNAL_TEMP_TASK,                //Сигнал "задание температуры"
         RV_SIGNAL_WASH_ABORTED,             //Сигнал "мойка закончена некорректно"
+        RV_PRESSURE_CONTROL,                //Задание давления для регулятора
+        RV_DONT_USE_WATER_TANK,             //Не использовать вторичную воду при мойке
         RV_RESERV_START,                    //начало резервных параметров
 
         RV_WORKCENTER = 104,		//Номер рабочего центра объекта мойки

@@ -920,6 +920,13 @@ void cipline_tech_object::initline()
         PUMPFREQ = NP;
         sprintf(devname, "LINE%dVC%d", number, 14);
         ao = VC(devname);
+
+        sprintf(devname, "LINE%dPT%d", number, 1);
+        PRESSURE = PT(devname);
+        if (((device*)PRESSURE)->get_type() == device::DT_NONE)
+            {
+            PRESSURE = 0;
+            }
         }
 
     PIDF = new MSAPID(&rt_par_float, 72, P_ZAD_FLOW, PUMPFREQ, 0, cnt );
@@ -1967,7 +1974,7 @@ void cipline_tech_object::_Stop( int step_to_stop )
             break;
         }
     RHI();
-    PT();
+    PauseTimers();
     cnt->pause();
     StopDev();
     state=0;
@@ -1979,7 +1986,7 @@ void cipline_tech_object::RHI( void )
     PIDF->HI=0;
     }
 
-void cipline_tech_object::PT( void )
+void cipline_tech_object::PauseTimers( void )
     {
     int i;
     for (i=0; i<TMR_CNT; i++) T[i]->pause();
@@ -2643,7 +2650,7 @@ int cipline_tech_object::_InitStep( int step_to_init, int not_first_call )
     int tank_w_dest = TANK_W;
     int tank_w_src = TANK_W;
 
-    if (1 == dont_use_water_tank)
+    if (1 == dont_use_water_tank || (rt_par_float[P_DONT_USE_WATER_TANK] == 1))
     {
         tank_w_dest = KANAL;
         tank_w_src = WATER;
@@ -2779,7 +2786,7 @@ int cipline_tech_object::_InitStep( int step_to_init, int not_first_call )
 
         case 555:
             RHI();
-            PT();
+            PauseTimers();
             cnt->pause();
             NP->off();
             nplaststate = false;
@@ -2838,11 +2845,24 @@ int cipline_tech_object::EvalPIDS()
                 NP->set_value(dev_ai_pump_frequency->get_value());
                 }
             }
-        else
+        else if (dev_ai_pump_feedback)
             {
-            if (dev_ai_pump_feedback)
+            if (rt_par_float[P_PRESSURE_CONTROL] > 0 && PRESSURE)
+                {
+                PIDF->eval(PRESSURE->get_value(), dev_ai_pump_feedback->get_value());
+                rt_par_float[P_ZAD_FLOW] = rt_par_float[P_FLOW];
+                }
+            else
                 {
                 PIDF->eval(cnt->get_flow(), dev_ai_pump_feedback->get_value());
+                }
+            }
+        else
+            {
+            if (rt_par_float[P_PRESSURE_CONTROL] > 0 && PRESSURE)
+                {
+                PIDF->eval(PRESSURE->get_value(), rt_par_float[P_PRESSURE_CONTROL]);
+                rt_par_float[P_ZAD_FLOW] = rt_par_float[P_FLOW];
                 }
             else
                 {
@@ -3098,7 +3118,7 @@ int cipline_tech_object::_DoStep( int step_to_do )
     int tank_w_dest = TANK_W;
     int tank_w_src = TANK_W;
 
-    if (1 == dont_use_water_tank)
+    if (1 == dont_use_water_tank || (rt_par_float[P_DONT_USE_WATER_TANK] == 1))
     {
         tank_w_dest = KANAL;
         tank_w_src = WATER;
