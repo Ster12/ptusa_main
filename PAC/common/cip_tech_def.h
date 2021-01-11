@@ -666,6 +666,7 @@ class cipline_tech_object: public tech_object
         TRecipeManager* lineRecipes;
         int loadedRecipe;
         int lastloadedRecipe;
+        int loadedProgram;
         char* loadedRecName;
         char* programList;
         char* currentProgramName;

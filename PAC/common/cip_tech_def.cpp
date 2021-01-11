@@ -153,6 +153,7 @@ cipline_tech_object::cipline_tech_object(const char* name, u_int number, u_int t
     state=0;
     loadedRecipe = -1;
     lastloadedRecipe = -1;
+    loadedProgram = -1;
     curprg=-1;
     cip_in_error = 0;
 
@@ -1644,6 +1645,7 @@ void cipline_tech_object::formProgramList( unsigned long programmask )
 
 void cipline_tech_object::loadProgramFromList( int selectedPrg )
     {
+    loadedProgram = selectedPrg;
     switch (selectedPrg)
         {
         case SPROG_RINSING_CLEAN:
@@ -2165,6 +2167,7 @@ int cipline_tech_object::EvalCommands()
                 resetProgramList();
                 resetCarNumber();
                 loadedRecipe = -1;
+                loadedProgram = -1;
                 rt_par_float[P_PROGRAM] = 0;
                 }
             break;
@@ -3345,6 +3348,7 @@ void cipline_tech_object::_ResetLinesDevicesBeforeReset( void )
         closeLineValves();
         }
     loadedRecipe = -1;
+    loadedProgram = -1;
     ResetStat();
     rt_par_float[P_PROGRAM] = 0;
     rt_par_float[P_RET_STATE] = 0;
