@@ -3661,7 +3661,7 @@ int cipline_tech_object::_CheckErr( void )
 
     if ( !G_DEBUG )
         {
-        if (NP->get_state() == -1)
+        if (NP->get_state() <= -1)
             {
             if (!pumpflag)
                 {
