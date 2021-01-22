@@ -3000,7 +3000,7 @@ int cipline_tech_object::_DoStep( int step_to_do )
 
     if (step_to_do == 7 || step_to_do == 8 || step_to_do == 22) is_prerinse = true;
 
-    if (step_to_do == 35 || step_to_do == 37 || step_to_do == 55 || step_to_do == 57) is_postrinse = true;
+    if (step_to_do == 35 || step_to_do == 37 || step_to_do == 55 || step_to_do == 57) is_intermediate_rinse = true;
 
     if (step_to_do == 42)
         {
@@ -3081,7 +3081,7 @@ int cipline_tech_object::_DoStep( int step_to_do )
         }
     if (dev_upr_circulation)
         {
-        if ((step_to_do == 28 || step_to_do == 48 || step_to_do == 66 || step_to_do == 77 ||
+        if ((((step_to_do == 28 || step_to_do == 48 || step_to_do == 66 || step_to_do == 77) && circ_temp_reached) ||
             step_to_do == 8 || step_to_do == 37 || step_to_do == 57 || step_to_do == 86) && (!wasflip))
             {
             dev_upr_circulation->on();
@@ -5101,6 +5101,7 @@ int cipline_tech_object::_InitCirc( int what, int step_to_init, int not_first_ca
         {
         circ_podp_count = 0;
         circ_was_feed = 0;
+        circ_temp_reached = 0;
         }
     if (circ_was_feed)
         {
@@ -5748,6 +5749,7 @@ int cipline_tech_object::_Circ( int what )
     if (TR->get_value() >= rt_par_float[P_ZAD_PODOGR]-rt_par_float[P_DELTA_TR] && cnt->get_flow() > rt_par_float[P_R_NO_FLOW])
         {
         T[TMR_OP_TIME]->start();
+        circ_temp_reached = 1;
         }
     else
         {

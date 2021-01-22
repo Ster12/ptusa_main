@@ -661,6 +661,7 @@ class cipline_tech_object: public tech_object
         char circ_water_no_pump_stop; //не останавливать насос при поялении верхнего уровня в бачке
         char circ_was_feed; //флаг факта подпитки
         unsigned long circ_max_timer; //таймер подпитки
+        char circ_temp_reached; //флаг достижения заданной температуры на возврате
 
         //Рецепты
         TRecipeManager* lineRecipes;
