@@ -13,14 +13,14 @@
 #include "param_ex.h"
 #include "dtime.h"
 
-
-
+///@brief Множитель размера строки для кодировки UTF-8
+#define UNICODE_MULTIPLIER 3
 ///@brief Максимальная длина имени для рецепта
-#define MAX_REC_NAME_LENGTH 32L * 2
+#define MAX_REC_NAME_LENGTH 32L
 ///@brief Размер блока памяти в байтах
 #define BLOCK_SIZE 128L
 ///@brief Интервал проверки изменений в рецепте
-#define RECIPE_SAVE_INTERVAL 60000L
+#define RECIPE_SAVE_INTERVAL 30000L
 
 ///@class TRecipeManager mcaRec.h
 ///@brief Класс для хранения и работы с рецептами в энергонезависимой памяти контроллера для МСА

@@ -35,8 +35,8 @@ TRecipeManager::TRecipeManager( int lineNo ): lineNo(lineNo),
     recipeMemory = new unsigned char[recipeMemorySize];
     LoadFromFile(defaultfilename);
     lastEvalTime = get_millisec();
-    currentRecipeName = new char[recipeNameLength];
-    recipeList = new char[(recipeNameLength + 6) * recipePerLine];
+    currentRecipeName = new char[recipeNameLength * UNICODE_MULTIPLIER];
+    recipeList = new char[(recipeNameLength + 12) * recipePerLine];
     strcpy(recipeList,"");
     ReadMem(startAddr(), recipeNameLength, (unsigned char*)currentRecipeName, true );
     FormRecipeList();
@@ -353,8 +353,8 @@ int TRecipeManager::ResetRecipeToDefaults( int recipeNo )
 void TRecipeManager::FormRecipeList()
     {
     strcpy(recipeList, "");
-    char tmpstr[6];
-    char tmprecipename[MAX_REC_NAME_LENGTH];
+    char tmpstr[12];
+    char tmprecipename[MAX_REC_NAME_LENGTH * UNICODE_MULTIPLIER];
     for (int i = 0; i < recipePerLine; i++)
         {
         if (getRecipeValue(i, RV_IS_USED) != 0)
@@ -543,7 +543,7 @@ int TRecipeManager::ReadMem( unsigned long startaddr, unsigned long length,
         {
         char* tmp = new char[ length ];
         memcpy( tmp, recipeMemory + startaddr, length );
-        convert_windows1251_to_utf8( (char*)buf, tmp );
+        convert_windows1251_to_utf8( (char*)buf, tmp);
         delete[] tmp;
         }
     else
@@ -560,7 +560,7 @@ int TRecipeManager::WriteMem( unsigned long startaddr, unsigned long length,
     if ( is_string )
         {
         char* tmp = new char[ length ];
-        convert_utf8_to_windows1251( (char*)buf, tmp, length );
+        convert_utf8_to_windows1251( (char*)buf, tmp, length * UNICODE_MULTIPLIER );
         memcpy( recipeMemory + startaddr, tmp, length );
         delete[] tmp;
         }
@@ -629,7 +629,7 @@ int TMediumRecipeManager::recipePerLine = 10;
 
 int TMediumRecipeManager::blocksPerRecipe = 1;
 
-int TMediumRecipeManager::recipeNameLength = MAX_REC_NAME_LENGTH - 1;
+int TMediumRecipeManager::recipeNameLength = MAX_REC_NAME_LENGTH - 2;
 
 int TMediumRecipeManager::startRecipeParamsOffset = MAX_REC_NAME_LENGTH;
 
@@ -867,8 +867,8 @@ int TMediumRecipeManager::ResetRecipeToDefaults(int recipeNo)
 void TMediumRecipeManager::FormRecipeList()
 {
     strcpy(recipeList, "");
-    char tmpstr[6];
-    char tmprecipename[MAX_REC_NAME_LENGTH];
+    char tmpstr[12];
+    char tmprecipename[MAX_REC_NAME_LENGTH * UNICODE_MULTIPLIER];
     for (int i = 0; i < recipePerLine; i++)
     {
         if (getRecipeValue(i, RV_IS_USED) != 0)

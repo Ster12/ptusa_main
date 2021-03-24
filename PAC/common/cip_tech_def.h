@@ -696,7 +696,7 @@ class cipline_tech_object: public tech_object
         //Список программ для панели
 #define PANEL_MAX_PROGRAMS 16
 #define PANEL_PROGRAM_LENGTH 24
-        char prgArray[PANEL_MAX_PROGRAMS][PANEL_PROGRAM_LENGTH];
+        char prgArray[PANEL_MAX_PROGRAMS][PANEL_PROGRAM_LENGTH * UNICODE_MULTIPLIER];
         int prgNumber[PANEL_MAX_PROGRAMS];
         int prgListLen;
 

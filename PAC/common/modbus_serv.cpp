@@ -461,7 +461,7 @@ long ModbusServ::ModbusService( long len, unsigned char *data,unsigned char *out
 												}
 											if (k == recipeno)
 												{
-												char myrec[MAX_REC_NAME_LENGTH];
+												char myrec[MAX_REC_NAME_LENGTH * UNICODE_MULTIPLIER];
 												cipline_tech_object::Mdls[line - 1]->lineRecipes->getRecipeName(j, myrec);
 												CP1251toUnicode(myrec, &outdata[3+i*2]);
 												break;

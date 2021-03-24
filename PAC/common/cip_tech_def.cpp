@@ -187,6 +187,7 @@ cipline_tech_object::cipline_tech_object(const char* name, u_int number, u_int t
     dev_upr_circulation = 0;
     dev_os_pump_can_run = 0;
     dev_os_can_continue = 0;
+    dev_ls_ret_pump = 0;
 
     dev_upr_prerinse = 0;
     dev_upr_intermediate_rinse = 0;
@@ -1457,12 +1458,12 @@ void cipline_tech_object::initline()
 
 void cipline_tech_object::resetProgramName()
     {
-    sprintf(currentProgramName, "%c%c %c%c%c%c%c%c%c",205,229,226,251,225,240,224,237,0);
+    sprintf(currentProgramName, "Не выбран");
     }
 
 void cipline_tech_object::resetRecipeName()
     {
-    sprintf(loadedRecName, "%c%c %c%c%c%c%c%c%c",205,229,226,251,225,240,224,237,0);
+    sprintf(loadedRecName, "Не выбран");
     //Обнуляем ссылку на статистику мойки объекта.
     emptystats->resetstats();
     objectstats = emptystats;
@@ -1505,7 +1506,7 @@ void cipline_tech_object::resetProgramList( unsigned long programmask /*= 0xB00*
 
 void cipline_tech_object::formProgramList( unsigned long programmask )
     {
-    char tmp_str[ 2 * PROGRAM_MAX_LEN ];
+    char tmp_str[ 2 * PROGRAM_MAX_LEN * UNICODE_MULTIPLIER ];
     prgListLen = 0;
     ModbusServ::UpdateLinePrograms(nmr);
     if (programmask == 0)
