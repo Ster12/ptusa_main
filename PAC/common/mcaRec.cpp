@@ -541,7 +541,7 @@ int TRecipeManager::ReadMem( unsigned long startaddr, unsigned long length,
     {
     if ( is_string )
         {
-        char* tmp = new char[ length ];
+        char* tmp = new char[ length * UNICODE_MULTIPLIER ];
         memcpy( tmp, recipeMemory + startaddr, length );
         convert_windows1251_to_utf8( (char*)buf, tmp);
         delete[] tmp;
@@ -559,8 +559,8 @@ int TRecipeManager::WriteMem( unsigned long startaddr, unsigned long length,
     {
     if ( is_string )
         {
-        char* tmp = new char[ length ];
-        convert_utf8_to_windows1251( (char*)buf, tmp, length * UNICODE_MULTIPLIER );
+        char* tmp = new char[ length + 1 ];
+        convert_utf8_to_windows1251( (char*)buf, tmp, strlen((char*)buf));
         memcpy( recipeMemory + startaddr, tmp, length );
         delete[] tmp;
         }
@@ -873,7 +873,7 @@ void TMediumRecipeManager::FormRecipeList()
     {
         if (getRecipeValue(i, RV_IS_USED) != 0)
         {
-            ReadMem(startAddr(i), recipeNameLength, (unsigned char*)tmprecipename);
+            ReadMem(startAddr(i), recipeNameLength, (unsigned char*)tmprecipename, true);
             sprintf(tmpstr, "%d##", i + 1);
             strcat(recipeList, tmpstr);
             strcat(recipeList, tmprecipename);
@@ -885,7 +885,7 @@ void TMediumRecipeManager::FormRecipeList()
 
 void TMediumRecipeManager::LoadRecipeName()
 {
-    ReadMem(startAddr(), recipeNameLength, (unsigned char*)currentRecipeName);
+    ReadMem(startAddr(), recipeNameLength, (unsigned char*)currentRecipeName, true);
 }
 
 int TMediumRecipeManager::ToRecipe(int recNo)
@@ -938,15 +938,37 @@ void TMediumRecipeManager::NullifyRecipe()
     LoadRecipeName();
 }
 
-int TMediumRecipeManager::ReadMem(unsigned long startaddr, unsigned long length, unsigned char* buf)
+int TMediumRecipeManager::ReadMem(unsigned long startaddr, unsigned long length, unsigned char* buf, bool is_string)
 {
-    memcpy(buf, recipeMemory + startaddr, length);
+    if (is_string)
+        {
+        char* tmp = new char[length * UNICODE_MULTIPLIER];
+        memcpy(tmp, recipeMemory + startaddr, length);
+        convert_windows1251_to_utf8((char*)buf, tmp);
+        delete[] tmp;
+        }
+    else
+        {
+        memcpy(buf, recipeMemory + startaddr, length);
+        }
+
     return 0;
 }
 
-int TMediumRecipeManager::WriteMem(unsigned long startaddr, unsigned long length, unsigned char* buf)
+int TMediumRecipeManager::WriteMem(unsigned long startaddr, unsigned long length, unsigned char* buf, bool is_string)
 {
-    memcpy(recipeMemory + startaddr, buf, length);
+    if (is_string)
+        {
+        char* tmp = new char[length + 1];
+        convert_utf8_to_windows1251((char*)buf, tmp, length * UNICODE_MULTIPLIER);
+        memcpy(recipeMemory + startaddr, tmp, length);
+        delete[] tmp;
+        }
+    else
+        {
+        memcpy(recipeMemory + startaddr, buf, length);
+        }
+
     return 0;
 }
 

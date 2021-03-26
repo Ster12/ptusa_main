@@ -5,6 +5,7 @@
 
 #include "cip_tech_def.h"
 #include "lua_manager.h"
+#include "utf2cp1251.h"
 
 TMediumRecipeManager* cipline_tech_object::causticRecipes = 0;
 
@@ -129,17 +130,17 @@ cipline_tech_object::cipline_tech_object(const char* name, u_int number, u_int t
     bachok_lvl_err_delay = get_millisec();
     steam_valve_delay = get_millisec();
     loadedRecName = new char[TRecipeManager::recipeNameLength];
-    programList = new char[PROGRAM_LIST_MAX_LEN];
+    programList = new char[PROGRAM_LIST_MAX_LEN * UNICODE_MULTIPLIER];
     strcpy(programList, "");
-    currentProgramName = new char[PROGRAM_MAX_LEN];
+    currentProgramName = new char[PROGRAM_MAX_LEN * UNICODE_MULTIPLIER];
     strcpy(currentProgramName, "");
-    ncar1 = new char[CAR_NAME_MAX_LENGTH];
+    ncar1 = new char[CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER];
     strcpy(ncar1, "");
-    ncar2 = new char[CAR_NAME_MAX_LENGTH];
+    ncar2 = new char[CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER];
     strcpy(ncar2, "");
-    ncar3 = new char[CAR_NAME_MAX_LENGTH];
+    ncar3 = new char[CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER];
     strcpy(ncar3, "");
-    ncar4 = new char[CAR_NAME_MAX_LENGTH];
+    ncar4 = new char[CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER];
     strcpy(ncar4, "");
     switch1 = 0;
     switch2 = 0;
@@ -577,71 +578,86 @@ int cipline_tech_object::set_cmd( const char *prop, u_int idx, const char* val )
     {
     if (0 == strcmp(prop, "CUR_REC"))
         {
+        u_int slen = utf8_strlen(val);
+        if (slen < (unsigned int)lineRecipes->recipeNameLength)
+            {
 #ifdef WIN_OS
-        strncpy_s(lineRecipes->currentRecipeName, lineRecipes->recipeNameLength,
-            val, _TRUNCATE);
+            strncpy_s(lineRecipes->currentRecipeName, lineRecipes->recipeNameLength * UNICODE_MULTIPLIER, val, _TRUNCATE);
 #else
-        strncpy( lineRecipes->currentRecipeName, val, lineRecipes->recipeNameLength );
+            strncpy( lineRecipes->currentRecipeName, val, lineRecipes->recipeNameLength * UNICODE_MULTIPLIER);
 #endif
+            }
         return 0;
         }
 
     if (0 == strcmp(prop, "CAUSTIC_PAR_NAME"))
         {
+        u_int slen = utf8_strlen(val);
+        if (slen < (unsigned int)causticRecipes->recipeNameLength)
+            {
 #ifdef WIN_OS
-        strncpy_s(causticRecipes->currentRecipeName, causticRecipes->recipeNameLength,
-            val, _TRUNCATE);
+            strncpy_s(causticRecipes->currentRecipeName, causticRecipes->recipeNameLength * UNICODE_MULTIPLIER,
+                val, _TRUNCATE);
 #else
-        strncpy(causticRecipes->currentRecipeName, val, causticRecipes->recipeNameLength);
+            strncpy(causticRecipes->currentRecipeName, val, causticRecipes->recipeNameLength * UNICODE_MULTIPLIER);
 #endif
+            }
         return 0;
         }
 
     if (0 == strcmp(prop, "ACID_PAR_NAME"))
         {
+        u_int slen = utf8_strlen(val);
+        if (slen < (unsigned int)acidRecipes->recipeNameLength)
+            {
 #ifdef WIN_OS
-        strncpy_s(acidRecipes->currentRecipeName, acidRecipes->recipeNameLength,
-            val, _TRUNCATE);
+            strncpy_s(acidRecipes->currentRecipeName, acidRecipes->recipeNameLength * UNICODE_MULTIPLIER,
+                val, _TRUNCATE);
 #else
-        strncpy(acidRecipes->currentRecipeName, val, acidRecipes->recipeNameLength);
+            strncpy(acidRecipes->currentRecipeName, val, acidRecipes->recipeNameLength * UNICODE_MULTIPLIER);
 #endif
+            }
         return 0;
         }
 
     if (0 == strcmp(prop, "NCAR"))
         {
-        switch (idx)
+        u_int slen = utf8_strlen(val);
+        if (slen < CAR_NAME_MAX_LENGTH)
             {
-            case 0:
-            case 1:
+            switch (idx)
+                {
+                case 0:
+                case 1:
 #ifdef WIN_OS
-                strncpy_s(ncar1, CAR_NAME_MAX_LENGTH, val, _TRUNCATE);
+                    strncpy_s(ncar1, CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER, val, _TRUNCATE);
 #else
-                strncpy( ncar1, val, CAR_NAME_MAX_LENGTH );
+                    strncpy(ncar1, val, CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER);
 #endif
-                objectstats = statsbase->stats_if_exists(ncar1, emptystats);
-                break;
-            case 2:
+                    objectstats = statsbase->stats_if_exists(ncar1, emptystats);
+                    break;
+                case 2:
 #ifdef WIN_OS
-                strncpy_s(ncar2, CAR_NAME_MAX_LENGTH, val, _TRUNCATE);
+                    strncpy_s(ncar2, CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER, val, _TRUNCATE);
 #else
-                strncpy( ncar2, val, CAR_NAME_MAX_LENGTH );
+                    strncpy(ncar2, val, CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER);
 #endif
-                break;
-            case 3:
+                    break;
+                case 3:
 #ifdef WIN_OS
-                strncpy_s(ncar3, CAR_NAME_MAX_LENGTH, val, _TRUNCATE);
+                    strncpy_s(ncar3, CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER, val, _TRUNCATE);
 #else
-                strncpy( ncar3, val, CAR_NAME_MAX_LENGTH );
+                    strncpy(ncar3, val, CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER);
 #endif
-                break;
-            case 4:
+                    break;
+                case 4:
 #ifdef WIN_OS
-                strncpy_s(ncar4, CAR_NAME_MAX_LENGTH, val, _TRUNCATE);
+                    strncpy_s(ncar4, CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER, val, _TRUNCATE);
 #else
-                strncpy( ncar4, val, CAR_NAME_MAX_LENGTH );
+                    strncpy(ncar4, val, CAR_NAME_MAX_LENGTH * UNICODE_MULTIPLIER);
 #endif
-                break;
+                    break;
+                }
             }
 
         return 0;
@@ -1471,7 +1487,7 @@ void cipline_tech_object::resetRecipeName()
 
 void cipline_tech_object::resetProgramList( unsigned long programmask /*= 0xB00*/ )
     {
-    char tmp_str[ PROGRAM_MAX_LEN ];
+    char tmp_str[ PROGRAM_MAX_LEN * UNICODE_MULTIPLIER ];
     prgListLen = 0;
     ModbusServ::UpdateLinePrograms(nmr);
     strcpy(programList,"");
@@ -6074,7 +6090,7 @@ int cipline_tech_object::init_object_devices()
     int cipline_tech_object::check_DI(device*& outdev, int parno)
         {
         u_int dev_no = (u_int)rt_par_float[parno];
-        char devname[MAX_DEV_NAME] = {0};
+        char devname[MAX_DEV_NAME * UNICODE_MULTIPLIER] = {0};
         device* dev;
         if (dev_no > 0)
             {
@@ -6116,7 +6132,7 @@ int cipline_tech_object::init_object_devices()
     int cipline_tech_object::check_DO(device*& outdev, int parno)
         {
         u_int dev_no = (u_int)rt_par_float[parno];
-        char devname[MAX_DEV_NAME] = { 0 };
+        char devname[MAX_DEV_NAME * UNICODE_MULTIPLIER] = { 0 };
         device* dev;
         if (dev_no > 0)
             {
@@ -6158,7 +6174,7 @@ int cipline_tech_object::init_object_devices()
     int cipline_tech_object::check_AI(device*& outdev, int parno)
         {
         u_int dev_no = (u_int)rt_par_float[parno];
-        char devname[MAX_DEV_NAME] = { 0 };
+        char devname[MAX_DEV_NAME * UNICODE_MULTIPLIER] = { 0 };
         device* dev;
         if (dev_no > 0)
             {
@@ -6192,7 +6208,7 @@ int cipline_tech_object::init_object_devices()
     int cipline_tech_object::check_AO(device*& outdev, int parno)
         {
         u_int dev_no = (u_int)rt_par_float[parno];
-        char devname[MAX_DEV_NAME] = { 0 };
+        char devname[MAX_DEV_NAME * UNICODE_MULTIPLIER] = { 0 };
         device* dev;
         if (dev_no > 0)
             {
@@ -6234,7 +6250,7 @@ int cipline_tech_object::init_object_devices()
     int cipline_tech_object::check_LS(device*& outdev, int parno)
         {
         u_int dev_no = (u_int)rt_par_float[parno];
-        char devname[MAX_DEV_NAME] = { 0 };
+        char devname[MAX_DEV_NAME * UNICODE_MULTIPLIER] = { 0 };
         device* dev;
         if (dev_no > 0)
             {
@@ -6269,7 +6285,7 @@ int cipline_tech_object::init_object_devices()
     int cipline_tech_object::check_M(device*& outdev, int parno)
         {
         u_int dev_no = (u_int)rt_par_float[parno];
-        char devname[MAX_DEV_NAME] = { 0 };
+        char devname[MAX_DEV_NAME * UNICODE_MULTIPLIER] = { 0 };
         device* dev;
         if (dev_no > 0)
             {
