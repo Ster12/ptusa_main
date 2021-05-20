@@ -3070,7 +3070,7 @@ int cipline_tech_object::_DoStep( int step_to_do )
     if (dev_upr_circulation)
         {
         if ((((step_to_do == 28 || step_to_do == 48 || step_to_do == 66 || step_to_do == 77) && circ_temp_reached) ||
-            step_to_do == 8 || step_to_do == 37 || step_to_do == 57 || step_to_do == 86) && (!wasflip))
+            step_to_do == 7 || step_to_do == 8 || step_to_do == 37 || step_to_do == 57 || step_to_do == 86) && (!wasflip))
             {
             dev_upr_circulation->on();
             }
