@@ -2892,6 +2892,8 @@ int cipline_tech_object::EvalPIDS()
             flagnplaststate = true;
             NP->off();
             NP->set_value(0);
+            ao->set_value(0);
+            
             if (dev_upr_pump_stopped)
                 {
                 if (cnt->get_flow() < rt_par_float[P_R_NO_FLOW])
@@ -2916,6 +2918,7 @@ int cipline_tech_object::EvalPIDS()
                 if (nplaststate)
                     {
                     PIDF->pid_reset();
+                    PIDP->pid_reset();
                     NP->on();
                     flagnplaststate = false;
                     }
